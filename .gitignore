@@ -1,0 +1,90 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ==============================
+# Virtual Environment
+# ==============================
+venv/
+.venv/
+env/
+
+# ==============================
+# IDE
+# ==============================
+.idea/
+.vscode/
+
+# ==============================
+# Logs
+# ==============================
+logs/
+finetuning/logs/
+
+# ==============================
+# Training Outputs
+# ==============================
+checkpoints/
+outputs/
+offload/
+best_models/
+finetuning/outputs/
+
+# ==============================
+# Model Weights
+# ==============================
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# ==============================
+# Generated Vector Database
+# ==============================
+vector_db/
+
+# ==============================
+# Large PDF Dataset
+# ==============================
+data/pdfs/
+
+# ==============================
+# Generated Extracted Data
+# ==============================
+data/extracted/
+
+# ==============================
+# Generated Processed Data
+# ==============================
+processed/
+finetuning/processed/
+
+# ==============================
+# Fine-tuning Generated Data
+# ==============================
+finetuning/dataset/
+finetuning/folds/
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+
+# ==============================
+# Jupyter
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
+# Local data - not included in repository
+data/

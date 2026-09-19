@@ -1,0 +1,233 @@
+/* =====================================================
+   GOOGLE FONT
+===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"]{
+    font-family: 'Poppins', sans-serif;
+}
+
+/* =====================================================
+   BACKGROUND
+===================================================== */
+
+.stApp{
+    background:#f4f6fb;
+}
+
+/* =====================================================
+   REMOVE STREAMLIT DEFAULTS
+===================================================== */
+
+#MainMenu{
+    visibility:hidden;
+}
+
+footer{
+    visibility:hidden;
+}
+
+header{
+    visibility:hidden;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.main-header{
+
+    text-align:center;
+
+    margin-top:15px;
+
+    margin-bottom:25px;
+}
+
+.main-header h1{
+
+    color:#7A0019;
+
+    font-size:42px;
+
+    font-weight:700;
+
+    margin-bottom:5px;
+}
+
+.main-header p{
+
+    color:#555;
+
+    font-size:18px;
+
+    font-weight:400;
+}
+
+/* =====================================================
+   CHAT AREA
+===================================================== */
+
+.stChatMessage{
+
+    border-radius:18px;
+
+    padding:10px;
+
+    margin-top:12px;
+
+    margin-bottom:12px;
+
+    box-shadow:0px 4px 15px rgba(0,0,0,.08);
+
+    background:white;
+}
+
+/* =====================================================
+   USER CHAT
+===================================================== */
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]){
+
+    background:#7A0019;
+
+    color:white;
+}
+
+/* =====================================================
+   ASSISTANT CHAT
+===================================================== */
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]){
+
+    background:white;
+
+    color:#222;
+}
+
+/* =====================================================
+   INPUT BOX
+===================================================== */
+
+[data-testid="stChatInput"]{
+
+    border-radius:15px;
+
+    border:2px solid #7A0019;
+
+    background:white;
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.stButton>button{
+
+    background:#7A0019;
+
+    color:white;
+
+    border-radius:10px;
+
+    border:none;
+
+    padding:10px 18px;
+
+    font-weight:600;
+}
+
+.stButton>button:hover{
+
+    background:#990022;
+}
+
+/* =====================================================
+   LINK BUTTON
+===================================================== */
+
+.stLinkButton>a{
+
+    background:#7A0019 !important;
+
+    color:white !important;
+
+    border-radius:10px;
+
+    padding:8px 15px;
+
+    text-decoration:none;
+}
+
+/* =====================================================
+   SOURCE BOX
+===================================================== */
+
+.source-box{
+
+    background:white;
+
+    border-left:5px solid #7A0019;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    margin-top:10px;
+
+    margin-bottom:10px;
+
+    box-shadow:0px 2px 10px rgba(0,0,0,.08);
+}
+
+/* =====================================================
+   DOWNLOAD BOX
+===================================================== */
+
+.download-box{
+
+    background:#fff;
+
+    border-left:5px solid #0a7d36;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    margin-top:10px;
+
+    margin-bottom:10px;
+
+    box-shadow:0px 2px 10px rgba(0,0,0,.08);
+}
+
+/* =====================================================
+   NAVIGATION BOX
+===================================================== */
+
+.navigation-box{
+
+    background:white;
+
+    border-left:5px solid #0057b8;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    margin-top:10px;
+
+    margin-bottom:10px;
+
+    box-shadow:0px 2px 10px rgba(0,0,0,.08);
+}
+
+/* =====================================================
+   SPINNER
+===================================================== */
+
+.stSpinner{
+
+    color:#7A0019;
+}
