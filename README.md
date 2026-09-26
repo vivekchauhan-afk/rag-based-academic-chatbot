@@ -1,4 +1,4 @@
-Absolutely. Here is the **complete `README.md` again**, ready to copy and paste into your project.
+
 
 ````markdown
 # 📚 Bookly - RAG Based Educational Chatbot
