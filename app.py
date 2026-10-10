@@ -1,5 +1,6 @@
 import streamlit as st
-from query_system import ask_question
+from pipeline.rag_pipeline import RAGPipeline
+
 
 # =====================================================
 # PAGE CONFIG
@@ -11,6 +12,36 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+
+
+# =====================================================
+# SESSION STATE
+# =====================================================
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+
+# =====================================================
+# LOAD RAG PIPELINE
+# =====================================================
+
+@st.cache_resource
+def load_rag_pipeline():
+    """
+    Load the complete RAG pipeline once.
+
+    Streamlit reruns the script whenever the user
+    interacts with the UI, so cache_resource prevents
+    the embedding model, reranker, and LLM from being
+    loaded again on every interaction.
+    """
+    return RAGPipeline()
+
+
+rag_pipeline = load_rag_pipeline()
+
+
 # =====================================================
 # SIDEBAR
 # =====================================================
@@ -26,22 +57,19 @@ with st.sidebar:
         st.session_state.messages.clear()
 
         st.rerun()
+
+
 # =====================================================
 # LOAD CSS
 # =====================================================
 
 with open("style.css", "r", encoding="utf-8") as f:
+
     st.markdown(
         f"<style>{f.read()}</style>",
         unsafe_allow_html=True
     )
 
-# =====================================================
-# SESSION STATE
-# =====================================================
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
 # =====================================================
 # HEADER
@@ -51,7 +79,7 @@ st.markdown(
     """
 <div class="main-header">
 
-<h1>🎓 College  AI Assistant</h1>
+<h1>🎓 College AI Assistant</h1>
 
 <p>
 Hybrid Retrieval-Augmented Generation
@@ -64,6 +92,7 @@ Hybrid Retrieval-Augmented Generation
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+
 # =====================================================
 # CHAT HISTORY
 # =====================================================
@@ -74,39 +103,71 @@ for message in st.session_state.messages:
 
         st.markdown(message["content"])
 
-        # Sources
+        # ---------------------------------------------
+        # ASSISTANT CONTENT
+        # ---------------------------------------------
 
         if message["role"] == "assistant":
 
-            if "sources" in message:
+            # -----------------------------------------
+            # SOURCES
+            # -----------------------------------------
 
-                if message["sources"]:
+            sources = message.get(
+                "sources",
+                []
+            )
 
-                    st.markdown("#### 📄 Sources")
+            if sources:
 
-                    for s in message["sources"]:
+                st.markdown("#### 📄 Sources")
 
-                        st.markdown(
-                            f"""
-- **{s['source']}**
-  - Page: {s['page']}
+                for source in sources:
+
+                    st.markdown(
+                        f"""
+- **{source.get("source", "Unknown")}**
+  - Page: {source.get("page", "")}
 """
-                        )
+                    )
 
-            # Downloads
+                    # ---------------------------------
+                    # CLICKABLE SOURCE URL
+                    # ---------------------------------
 
-            if "downloads" in message:
+                    source_url = source.get(
+                        "url",
+                        ""
+                    )
 
-                if message["downloads"]:
-
-                    st.markdown("#### 📥 Downloads")
-
-                    for link in message["downloads"]:
+                    if source_url:
 
                         st.link_button(
-                            "Open Document",
-                            link
+                            "🔗 Open Source Document",
+                            source_url
                         )
+
+            # -----------------------------------------
+            # DOWNLOADS
+            # -----------------------------------------
+
+            downloads = message.get(
+                "downloads",
+                []
+            )
+
+            if downloads:
+
+                st.markdown("#### 📥 Downloads")
+
+                for link in downloads:
+
+                    st.link_button(
+                        "Open Document",
+                        link
+                    )
+
+
 # =====================================================
 # CHAT INPUT
 # =====================================================
@@ -115,37 +176,57 @@ question = st.chat_input(
     "Ask anything about NIT Kurukshetra..."
 )
 
+
+# =====================================================
+# PROCESS QUESTION
+# =====================================================
+
 if question:
 
-    # -----------------------------
+    # =================================================
     # SHOW USER MESSAGE
-    # -----------------------------
+    # =================================================
 
-    st.session_state.messages.append({
-        "role": "user",
-        "content": question
-    })
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": question
+        }
+    )
 
     with st.chat_message("user"):
+
         st.markdown(question)
 
-    # -----------------------------
-    # CALL AI
-    # -----------------------------
+
+    # =================================================
+    # CALL RAG PIPELINE
+    # =================================================
 
     with st.chat_message("assistant"):
 
-        with st.spinner("Searching official documents..."):
+        with st.spinner(
+            "Searching official documents..."
+        ):
 
             try:
 
-                response = ask_question(question)
+                response = rag_pipeline.ask(
+                    question
+                )
 
             except Exception as e:
 
-                st.error(f"Error: {e}")
+                st.error(
+                    f"Error while processing the question: {e}"
+                )
 
                 st.stop()
+
+
+        # =================================================
+        # ANSWER
+        # =================================================
 
         answer = response.get(
             "answer",
@@ -154,9 +235,10 @@ if question:
 
         st.markdown(answer)
 
-        # -------------------------
+
+        # =================================================
         # SOURCES
-        # -------------------------
+        # =================================================
 
         sources = response.get(
             "sources",
@@ -167,25 +249,42 @@ if question:
 
             st.markdown("### 📄 Sources")
 
-            for s in sources:
+            for source in sources:
 
                 st.markdown(
                     f"""
 **Document**
 
-{s["source"]}
+{source.get("source", "Unknown")}
 
 **Page**
 
-{s["page"]}
-
----
+{source.get("page", "")}
 """
                 )
 
-        # -------------------------
+                # -----------------------------------------
+                # CLICKABLE SOURCE URL
+                # -----------------------------------------
+
+                source_url = source.get(
+                    "url",
+                    ""
+                )
+
+                if source_url:
+
+                    st.link_button(
+                        "🔗 Open Source Document",
+                        source_url
+                    )
+
+                st.markdown("---")
+
+
+        # =================================================
         # DOWNLOAD LINKS
-        # -------------------------
+        # =================================================
 
         downloads = response.get(
             "downloads",
@@ -204,18 +303,15 @@ if question:
                 )
 
 
-    # -----------------------------
-    # SAVE CHAT HISTORY
-    # -----------------------------
+    # =================================================
+    # SAVE ASSISTANT RESPONSE
+    # =================================================
 
-    st.session_state.messages.append({
-
-        "role": "assistant",
-
-        "content": answer,
-
-        "sources": sources,
-
-        "downloads": downloads
-
-    })
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer,
+            "sources": sources,
+            "downloads": downloads
+        }
+    )

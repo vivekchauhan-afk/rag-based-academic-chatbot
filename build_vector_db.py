@@ -1,49 +1,104 @@
 import json
-import faiss
-import pickle
 import os
+import pickle
+
+import faiss
 import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer
+
+
+# =====================================================
+# CONFIGURATION
+# =====================================================
+
+CHUNK_FILE = "processed/all_chunks.json"
+
+VECTOR_DB_FOLDER = "vector_db"
+
+FAISS_INDEX_FILE = os.path.join(
+    VECTOR_DB_FOLDER,
+    "faiss_index.bin"
+)
+
+METADATA_FILE = os.path.join(
+    VECTOR_DB_FOLDER,
+    "metadata.pkl"
+)
+
+EMBEDDING_MODEL = "all-mpnet-base-v2"
+
+BATCH_SIZE = 64
+
 
 # =====================================================
 # LOAD CHUNKS
 # =====================================================
 
-CHUNK_FILE = "processed/all_chunks.json"
+if not os.path.exists(CHUNK_FILE):
 
-with open(CHUNK_FILE, "r", encoding="utf-8") as f:
-    chunks = json.load(f)
-
-if not chunks:
-    raise ValueError(
-        "No chunks found. Run chunking.py first."
+    raise FileNotFoundError(
+        f"Chunk file not found: {CHUNK_FILE}\n"
+        "Run ingestion/chunk_data.py first."
     )
 
-texts = [chunk["text"] for chunk in chunks]
+
+with open(
+    CHUNK_FILE,
+    "r",
+    encoding="utf-8"
+) as f:
+
+    chunks = json.load(f)
+
+
+if not chunks:
+
+    raise ValueError(
+        "No chunks found. "
+        "Run ingestion/chunk_data.py first."
+    )
+
+
+texts = [
+    chunk["text"]
+    for chunk in chunks
+]
+
 
 print("=" * 50)
 print(f"Loaded {len(texts)} chunks")
 print("=" * 50)
 
+
 # =====================================================
 # DEVICE
 # =====================================================
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "cpu"
+)
 
-print(f"Using device : {device}")
+print(f"Using device: {device}")
+
 
 # =====================================================
 # LOAD EMBEDDING MODEL
 # =====================================================
 
-print("Loading embedding model...")
+print(
+    f"Loading embedding model: {EMBEDDING_MODEL}"
+)
 
 model = SentenceTransformer(
-    "all-mpnet-base-v2",
+    EMBEDDING_MODEL,
     device=device
 )
+
+print("Embedding model loaded.")
+
 
 # =====================================================
 # CREATE EMBEDDINGS
@@ -55,58 +110,120 @@ embeddings = model.encode(
 
     texts,
 
-    batch_size=64,
+    batch_size=BATCH_SIZE,
 
     show_progress_bar=True,
 
     convert_to_numpy=True,
 
     normalize_embeddings=True
-
 )
 
-embeddings = embeddings.astype(np.float32)
 
-print("Embeddings Shape :", embeddings.shape)
+# =====================================================
+# CONVERT TO FLOAT32
+# =====================================================
+
+embeddings = np.asarray(
+    embeddings,
+    dtype=np.float32
+)
+
+
+print(
+    f"Embeddings shape: {embeddings.shape}"
+)
+
 
 # =====================================================
 # CREATE FAISS INDEX
 # =====================================================
-eembeddings = np.asarray(embeddings, dtype=np.float32)
 
 dimension = embeddings.shape[1]
 
-print(f"Embedding Dimension: {dimension}")
+print(
+    f"Embedding dimension: {dimension}"
+)
 
-index = faiss.IndexFlatIP(dimension)
 
-index.add(embeddings)
+# IndexFlatIP is appropriate because
+# embeddings are normalized.
+index = faiss.IndexFlatIP(
+    dimension
+)
 
-print(f"Vectors Stored: {index.ntotal}")
-print(f"Vectors Stored: {index.ntotal}")
+
+index.add(
+    embeddings
+) # pyright: ignore[reportCallIssue]
+
+
+print(
+    f"Vectors stored: {index.ntotal}"
+)
+
+
 # =====================================================
-# SAVE DATABASE
+# CREATE VECTOR DB DIRECTORY
 # =====================================================
 
-os.makedirs("../vector_db", exist_ok=True)
+os.makedirs(
+    VECTOR_DB_FOLDER,
+    exist_ok=True
+)
+
+
+# =====================================================
+# SAVE FAISS INDEX
+# =====================================================
 
 faiss.write_index(
     index,
-    "vector_db/faiss_index.bin"
+    FAISS_INDEX_FILE
 )
 
+
+# =====================================================
+# SAVE METADATA
+# =====================================================
+
 with open(
-        "../vector_db/metadata.pkl",
+    METADATA_FILE,
     "wb"
 ) as f:
 
-    pickle.dump(chunks, f)
+    pickle.dump(
+        chunks,
+        f
+    )
+
+
+# =====================================================
+# VERIFY DATABASE
+# =====================================================
 
 print("\n========================================")
 print("VECTOR DATABASE CREATED")
 print("========================================")
-print(f"Chunks      : {len(chunks)}")
-print(f"Embeddings  : {index.ntotal}")
-print("Index File  : vector_db/faiss_index.bin")
-print("Metadata    : vector_db/metadata.pkl")
+
+print(
+    f"Chunks       : {len(chunks)}"
+)
+
+print(
+    f"Embeddings   : {index.ntotal}"
+)
+
+print(
+    f"Dimension    : {dimension}"
+)
+
+print(
+    f"Index File   : {FAISS_INDEX_FILE}"
+)
+
+print(
+    f"Metadata     : {METADATA_FILE}"
+)
+
 print("========================================")
